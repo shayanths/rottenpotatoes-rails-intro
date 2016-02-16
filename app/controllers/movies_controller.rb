@@ -3,15 +3,30 @@ class MoviesController < ApplicationController
   def movie_params
     params.require(:movie).permit(:title, :rating, :description, :release_date)
   end
-
+  
+  
   def show
     id = params[:id] # retrieve movie ID from URI route
     @movie = Movie.find(id) # look up movie by unique ID
     # will render app/views/movies/show.<extension> by default
   end
 
+  
+
   def index
-    @movies = Movie.all
+    @all_ratings = ['G', 'PG', 'PG-13', 'R']
+    @selected_ratings = (params[:ratings].present? ? params[:ratings] : [])
+    
+    
+    ratings_dict =  params['ratings']
+
+    if params.length == 0
+      @movies = Movie.all()
+    elsif (!ratings_dict.nil?)
+      @movies = Movie.where(rating: ratings_dict.keys)
+    else
+      @movies = Movie.order(params[:sort])
+    end
   end
 
   def new
@@ -19,6 +34,7 @@ class MoviesController < ApplicationController
   end
 
   def create
+    
     @movie = Movie.create!(movie_params)
     flash[:notice] = "#{@movie.title} was successfully created."
     redirect_to movies_path
@@ -27,7 +43,7 @@ class MoviesController < ApplicationController
   def edit
     @movie = Movie.find params[:id]
   end
-
+  
   def update
     @movie = Movie.find params[:id]
     @movie.update_attributes!(movie_params)
